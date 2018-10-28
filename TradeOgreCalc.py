@@ -4,13 +4,13 @@ import csv
 
 net = 0.0
 net_amount = 0
+transactions = 0
 
 
 if len(sys.argv) > 1:
-    market = sys.argv[1]
+    market = sys.argv[1].upper()
 else:
-    market = 'BTC-GRFT'
-
+    market = 'BTC-TRTL'
 
 if len(sys.argv) > 2:
     file_name = sys.argv[2]
@@ -20,6 +20,7 @@ else:
 buy = True
 price = 0.0
 amount = 0
+units = ['BTC', 'Satoshis']
 
 with open(file_name) as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
@@ -27,11 +28,13 @@ with open(file_name) as csv_file:
     for row in csv_reader:
         
         #skip unrelated transactions
-        if row[1] !=  market:
+        if row[1] != market:
             continue
         
+        transactions += 1
+
         #figure out buy or sell
-        if row[0] == 'BUY':
+        if row[0].lower() == 'buy':
             buy = True
         else:
             buy = False
@@ -48,8 +51,20 @@ with open(file_name) as csv_file:
             net += price * amount
             net_amount -= amount
 
-if net_amount != 0:
-    print('%s net units sold' % str(-net_amount))
-    print('average unit price: %s Satoshis' % str((-net / float(net_amount) * 100000000)))
+if market[:3] == 'LTC':
+    units = ['LTC', 'Litoshis']
+    
+if net_amount > 0:
+    print('%f net units bought' % net_amount)
+    
+if net_amount < 0:
+    print('%f net units sold' % -net_amount)
 
-print('%s BTC net gain' % str(net)[:10])
+if net_amount != 0:
+    print('average unit price: %f %s' % ((-net / float(net_amount) * 100000000), units[1]))
+
+if transactions > 0:
+    print('%s %s net gain over %d transactions' % (str(net)[:10], units[0], transactions))
+else:
+    print('no transactions found for %s' % market)
+
